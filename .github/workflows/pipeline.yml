@@ -1,5 +1,6 @@
 name: MediCart pipeline
 
+
 on:
   push:
     branches: [main]
@@ -9,34 +10,61 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install
+
+      - name: Install frontend dependencies
+        working-directory: medicart-website/client
         run: npm ci
-      - name: Build
+
+      - name: Build frontend
+        working-directory: medicart-website/client
         run: npm run build
-      - name: Test
+
+      - name: Test frontend
+        working-directory: medicart-website/client
+        run: npm test
+
+      - name: Install backend dependencies
+        working-directory: medicart-website/server
+        run: npm ci
+
+      - name: Test backend
+        working-directory: medicart-website/server
         run: npm test
 
   deliver:
     needs: build-test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install
+
+      - name: Install frontend dependencies
+        working-directory: medicart-website/client
         run: npm ci
-      - name: Build
+
+      - name: Build frontend
+        working-directory: medicart-website/client
         run: npm run build
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: medicart-build-${{ github.sha }}
-          path: dist/
+          path: medicart-website/client/dist/
           retention-days: 7
